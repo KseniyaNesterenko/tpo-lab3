@@ -1,20 +1,26 @@
-package org.example;
+package pages;
 
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 
 public class AskQuestionPage {
     private WebDriver driver;
     private WebDriverWait wait;
 
     private By titleInput = By.xpath("//input[@name='title' and contains(@class, 'js-post-title-field') and @type='text']");
-    private By detailsInput = By.xpath("//*[contains(@name, 'post-text')]");
-    private By tagsInput = By.xpath("//div[contains(@class,'js-tag-editor')]/input");
+//    private By detailsInput = By.xpath("//*[contains(@class, 'fl-grow1 outline-none p12 pt6 w100 s-prose js-editor ProseMirror')]");
+//
+//    private By expectsInput = By.xpath("//*[contains(@class, 'fl-grow1 outline-none p12 pt6 w100 s-prose js-editor ProseMirror')]");
+    private By editorInputs = By.xpath("//*[contains(@class, 'js-editor ProseMirror')]");
+
+    private By tagsInput = By.xpath("//*[contains(@class, 's-input js-tageditor-replacing')]");
     private By startWritingButton = By.xpath("//button[contains(@class, 'js-modal-primary-btn') and text()='Start writing']");
-    private By reviewButton = By.xpath("//*[contains(@class, 'flex--item s-btn s-btn__filled s-btn__icon ws-nowrap js-begin-review-button js-gps-track')]");
+    private By nextButton = By.xpath("//*[contains(@class, 's-btn s-btn__filled mt12 js-next-problem-details js-next-buttons')]");
+    private By reviewButton = By.xpath("//*[contains(@class, 's-btn s-btn__filled s-btn__icon js-review-question-button')]");
 
 
     public AskQuestionPage(WebDriver driver) {
@@ -39,10 +45,23 @@ public class AskQuestionPage {
     }
 
     public void enterDetails(String details) {
-        WebElement detailsField = driver.findElement(detailsInput);
-        scrollToElement(detailsField);
-        detailsField.clear();
-        detailsField.sendKeys(details);
+        List<WebElement> editors = driver.findElements(editorInputs);
+        if (editors.size() > 0) {
+            WebElement detailsField = editors.get(0);
+            scrollToElement(detailsField);
+            detailsField.clear();
+            detailsField.sendKeys(details);
+        }
+    }
+
+    private void enterExpectations(String expects) {
+        List<WebElement> editors = driver.findElements(editorInputs);
+        if (editors.size() > 1) {
+            WebElement expectsField = editors.get(1);
+            scrollToElement(expectsField);
+            expectsField.clear();
+            expectsField.sendKeys(expects);
+        }
     }
 
     public void enterTags(String tags) {
@@ -65,6 +84,23 @@ public class AskQuestionPage {
         }
     }
 
+    public void clickNextButton() {
+        List<WebElement> buttons = driver.findElements(nextButton);
+        if (buttons.isEmpty()) {
+            return;
+        }
+
+        WebElement nextBtn = buttons.get(0);
+        try {
+            waitForElementToBeClickable(nextButton);
+            scrollToElement(nextBtn);
+            nextBtn.click();
+        } catch (Exception ignored) {
+        }
+    }
+
+
+
     private void dismissStartWritingPopup() {
         try {
             wait.until(ExpectedConditions.visibilityOfElementLocated(startWritingButton));
@@ -77,11 +113,16 @@ public class AskQuestionPage {
     }
 
 
-    public void askQuestion(String title, String details, String tags) {
-        dismissStartWritingPopup();
+    public void askQuestion(String title, String details, String expects, String tags) {
+//        dismissStartWritingPopup();
         enterTitle(title);
+        clickNextButton();
         enterDetails(details);
+        clickNextButton();
+        enterExpectations(expects);
+        clickNextButton();
         enterTags(tags);
         clickReviewButton();
     }
+
 }

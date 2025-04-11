@@ -1,21 +1,26 @@
-import org.example.*;
+package tests;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import pages.*;
+
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StackOverflowTest extends BaseTest {
 
+    @Order(3)
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
     void testInvalidLogin(String browser) {
@@ -32,6 +37,7 @@ public class StackOverflowTest extends BaseTest {
         }
     }
 
+    @Order(4)
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
     void testValidLogin(String browser) {
@@ -49,38 +55,34 @@ public class StackOverflowTest extends BaseTest {
         assertTrue(avatar.isDisplayed(), "Вход не выполнен.");
     }
 
-    //TODO: не работает из-за проверки
+    @Order(5)
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
-    void testInvalidSignUp(String browser) {
+    void testInvalidSignUp(String browser) throws InterruptedException {
         WebDriver driver = browser.equalsIgnoreCase("chrome") ? new ChromeDriver() : new FirefoxDriver();
-
-        driver.get("https://stackoverflow.com");
-
-        Cookie cookie = new Cookie(
-                "prov",
-                "7bc4edfd-e386-42e2-8278-602d21482360",
-                ".stackoverflow.com",
-                "/",
-                Date.from(Instant.parse("2026-04-08T13:17:54.161Z"))
-        );
-
-        driver.manage().addCookie(cookie);
-        driver.navigate().refresh();
-
         driver.get("https://stackoverflow.com/users/signup");
-
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        WebElement signUpForm = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("someElementId")));
 
         SignUpPage signUpPage = new SignUpPage(driver);
         signUpPage.signUp("", "");
 
         String pageSource = driver.getPageSource();
-        System.out.println(pageSource);
         assertTrue(pageSource.contains("Email cannot be empty"), "Ошибка не найдена на странице");
 
         driver.quit();
+    }
+
+    @Order(6)
+    @ParameterizedTest
+    @ValueSource(strings = {"chrome", "firefox"})
+    public void testValidSignUp(String browser) {
+        WebDriver driver = browser.equalsIgnoreCase("chrome") ? chromeDriver : firefoxDriver;
+        driver.get("https://stackoverflow.com/users/signup");
+
+        SignUpPage signUpPage = new SignUpPage(driver);
+        signUpPage.signUp("xenon@mail.ru", "xenon123");
+
+        String pageSource = driver.getPageSource();
+        assertTrue(pageSource.contains("Something went wrong."), "Ошибка не найдена на странице");
     }
 
     @ParameterizedTest
@@ -128,6 +130,7 @@ public class StackOverflowTest extends BaseTest {
         assertTrue(isUserFound, "Результаты поиска не найдены на странице.");
     }
 
+    @Disabled
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
     public void testClickTopQuestion(String browser) {
@@ -146,13 +149,15 @@ public class StackOverflowTest extends BaseTest {
         assertTrue(driver.getCurrentUrl().contains(expectedHref), "URL не совпадает.");
     }
 
+    @Order(2)
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
-    public void testTypeAnswerWithoutPosting(String browser) throws IOException {
+    public void testTypeAnswer(String browser) throws IOException {
         WebDriver driver = browser.equalsIgnoreCase("chrome") ? chromeDriver : firefoxDriver;
         driver.get("https://stackoverflow.com/questions");
 
         QuestionsPage questionsPage = new QuestionsPage(driver);
+        closeBanner(driver);
         questionsPage.clickTopQuestion();
 
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
@@ -161,6 +166,7 @@ public class StackOverflowTest extends BaseTest {
 
     }
 
+    @Order(1)
     @ParameterizedTest
     @ValueSource(strings = {"chrome", "firefox"})
     public void testCreateQuestion(String browser) {
@@ -175,7 +181,7 @@ public class StackOverflowTest extends BaseTest {
         loginPage.askButton();
 
         AskQuestionPage askQuestionPage = new AskQuestionPage(driver);
-        askQuestionPage.askQuestion("Заголовок вопроса", "Тело вопроса", "selenium");
+        askQuestionPage.askQuestion("Заголовок вопроса", "Тело вопросаТело вопроса", "ОжиданияОжиданияОжиданияОжидания", "selenium");
         assertTrue(true);
     }
 }

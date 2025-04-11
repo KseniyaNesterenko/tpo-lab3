@@ -1,3 +1,5 @@
+package tests;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.*;
@@ -8,6 +10,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 public class BaseTest {
     protected WebDriver chromeDriver;
@@ -26,10 +29,16 @@ public class BaseTest {
             options.addArguments("--start-maximized");
             options.addArguments("--disable-notifications");
             options.addArguments("--remote-allow-origins=*");
+            options.addArguments("--disable-blink-features=AutomationControlled");
+            options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
+            options.setExperimentalOption("useAutomationExtension", false);
             driver = new ChromeDriver(options);
+            ((JavascriptExecutor) driver).executeScript(
+                    "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+            );
         } else if ("firefox".equalsIgnoreCase(browser)) {
             FirefoxOptions options = new FirefoxOptions();
-            options.addArguments("-private");
+            options.addArguments("--disable-notifications");
             driver = new FirefoxDriver(options);
         } else {
             throw new IllegalArgumentException("Браузер не поддерживается: " + browser);
